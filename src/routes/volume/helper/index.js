@@ -4,6 +4,17 @@ export function isSchedulingFailure(volume) {
   return volume.conditions && volume.conditions.Scheduled && volume.conditions.Scheduled.status.toLowerCase() === 'false'
 }
 
+// A shared block volume used by multiple nodes without an NVMe reservation held
+export function isUnreservedSharedAccess(volume) {
+  return volume?.sharedBlock === true && volume?.conditions?.UnreservedSharedAccess?.status?.toLowerCase() === 'true'
+}
+
+// getUIAttachmentID returns the attachment ID of a UI attachment. A shared block
+// volume is attached to multiple nodes, so each node gets its own attachment.
+export function getUIAttachmentID(sharedBlock, host) {
+  return sharedBlock ? `longhorn-ui-${host}` : 'longhorn-ui'
+}
+
 export function getAttachHostModalProps(volumes, hosts, visible, dispatch) {
   return {
     items: volumes,
@@ -16,6 +27,7 @@ export function getAttachHostModalProps(volumes, hosts, visible, dispatch) {
           host: selectedHost,
           disableFrontend,
           url: urls[0],
+          attachmentID: getUIAttachmentID(volumes[0]?.sharedBlock === true, selectedHost),
         },
       })
     },
@@ -801,6 +813,9 @@ export function detachable(volume) {
     return false
   }
   if (volume.accessMode === 'rwx') {
+    if (volume.sharedBlock) {
+      return volume.state === 'attached'
+    }
     if (volume.migratable) {
       return volume.state === 'attached' && volume.controllers && volume.controllers.length <= 1
     }
@@ -814,7 +829,17 @@ export function attachable(volume) {
   if (isRestoring(volume)) {
     return false
   }
-  return volume.state === 'detached'
+  // A shared block volume can be attached to more nodes while it is attached.
+  return volume.state === 'detached' || (volume.sharedBlock === true && volume.state === 'attached')
+}
+
+// getUIAttachedHosts returns the nodes a shared block volume is attached to by
+// the UI.
+export function getUIAttachedHosts(volume) {
+  const attachments = Object.values(volume?.volumeAttachment?.attachments || {})
+  return attachments
+    .filter(attachment => attachment.attachmentID?.startsWith('longhorn-ui-'))
+    .map(attachment => attachment.nodeID)
 }
 
 export function groupBy(objectArray, property) {

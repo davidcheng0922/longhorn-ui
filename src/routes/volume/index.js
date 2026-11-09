@@ -73,7 +73,8 @@ import {
   getOfflineRebuildingModalProps,
   getReplicaRebuildingBandwidthLimitModalProps,
   getUblkParamsModalProps,
-  getRebuildConcurrentSyncLimitModalProps
+  getRebuildConcurrentSyncLimitModalProps,
+  getUIAttachmentID
 } from './helper'
 import { healthyVolume, inProgressVolume, degradedVolume, detachedVolume, faultedVolume, filterVolume, isVolumeImageUpgradable, isVolumeSchedule } from '../../utils/filter'
 import C from '../../utils/constants'
@@ -769,7 +770,7 @@ class Volume extends React.Component {
           payload: {
             host: selectedHost,
             disableFrontend,
-            urls,
+            volumes: urls.map((url, i) => ({ url, attachmentID: getUIAttachmentID(selectedRows[i]?.sharedBlock === true, selectedHost) })),
           },
         })
       },

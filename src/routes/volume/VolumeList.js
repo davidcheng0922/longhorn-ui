@@ -6,7 +6,7 @@ import classnames from 'classnames'
 import { LinkTo, EngineImageUpgradeTooltip, ReplicaHATooltip } from '../../components'
 import { formatMib } from '../../utils/formatter'
 import VolumeActions from './VolumeActions'
-import { isSchedulingFailure, getHealthState, needToWaitDone, extractImageVersion } from './helper/index'
+import { isSchedulingFailure, isUnreservedSharedAccess, getHealthState, needToWaitDone, extractImageVersion } from './helper/index'
 import { sortTable, sortTableObject, sortTableByUTCDate, sortTableByPVC, sortTableActualSize, sortTableState, sortTableByTimestamp } from '../../utils/sort'
 import { setSortOrder } from '../../utils/store'
 import { statusUpgradingEngine } from '../../utils/status'
@@ -257,6 +257,9 @@ function list({
             </Tooltip> : ''}
             {isSchedulingFailure(record) ? <Tooltip title={'The volume cannot be scheduled'}>
               <Icon style={{ marginRight: 5 }} type="exclamation-circle-o" className={'error'} />
+            </Tooltip> : null}
+            {isUnreservedSharedAccess(record) ? <Tooltip title={record.conditions.UnreservedSharedAccess.message}>
+              <Icon style={{ marginRight: 5 }} type="warning" className="color-warning" />
             </Tooltip> : null}
             <LinkTo style={{ display: 'flex', alignItems: 'center', wordBreak: 'break-all' }} to={{ pathname: `/volume/${text}` }}>
               {text}

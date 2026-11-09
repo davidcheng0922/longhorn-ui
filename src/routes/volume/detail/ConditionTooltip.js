@@ -75,6 +75,15 @@ function ConditionTooltip({ selectedVolume, conditionKey, snapshotWarningThresho
         conditionClassName = 'faulted'
       }
       break
+    case 'UnreservedSharedAccess':
+      if (status && status.toLowerCase() === 'true') {
+        conditionClassName = 'color-warning'
+        icon = <Icon style={{ marginRight: 5 }} type="warning" />
+      } else {
+        conditionClassName = 'healthy'
+        icon = <Icon style={{ marginRight: 5 }} type="check-circle" />
+      }
+      break
     default:
       break
   }

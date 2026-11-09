@@ -1,7 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import { Form, Checkbox, Alert } from 'antd'
+import { Form, Checkbox, Alert, Select } from 'antd'
 import { ModalBlur } from '../../components'
+import { getUIAttachedHosts, getUIAttachmentID } from './helper'
 
 const FormItem = Form.Item
 const formItemLayout = {
@@ -33,6 +34,8 @@ const modal = ({
     getFieldsValue,
   },
 }) => {
+  const sharedBlockHosts = items?.length === 1 && items[0].sharedBlock ? getUIAttachedHosts(items[0]) : []
+
   function handleOk() {
     validateFields((errors) => {
       if (errors) {
@@ -41,7 +44,29 @@ const modal = ({
       const data = {
         ...getFieldsValue(),
       }
-      const params = items?.map(item => {
+      const params = items?.flatMap(item => {
+        // Detach a shared block volume from the selected node only.
+        if (sharedBlockHosts.length > 0) {
+          return {
+            url: item.actions?.detach,
+            data: {
+              forceDetach: data.forceDetach,
+              attachmentID: getUIAttachmentID(true, data.host),
+              hostId: data.host,
+            },
+          }
+        }
+        // Bulk detach a shared block volume from all nodes attached by the UI.
+        if (item.sharedBlock) {
+          return getUIAttachedHosts(item).map(host => ({
+            url: item.actions?.detach,
+            data: {
+              forceDetach: data.forceDetach,
+              attachmentID: getUIAttachmentID(true, host),
+              hostId: host,
+            },
+          }))
+        }
         return {
           url: item.actions?.detach,
           data: {
@@ -95,6 +120,16 @@ const modal = ({
   return (
     <ModalBlur {...modalOpts}>
       <Form layout="horizontal" {...formItemLayout}>
+        {sharedBlockHosts.length > 0 && (
+          <FormItem label="Node" {...formItemLayout}>
+            {getFieldDecorator('host', {
+              initialValue: sharedBlockHosts[0],
+              rules: [{ required: true, message: 'Please select the node to detach from' }],
+            })(<Select>
+              {sharedBlockHosts.map(host => <Select.Option key={host} value={host}>{host}</Select.Option>)}
+            </Select>)}
+          </FormItem>
+        )}
         <FormItem label="Force Detach" valuepropname={'checked'} {...formItemLayoutCheckBox}>
           {getFieldDecorator('forceDetach', {
             initialValue: false,

@@ -241,7 +241,7 @@ function VolumeInfo({ selectedVolume, snapshotModalState, engineImages, hosts, c
           </span>
           <div className={styles.control} style={{ display: 'flex' }}>
             {selectedVolume?.conditions
-              && ['Restore', 'Scheduled', 'TooManySnapshots', 'OfflineRebuilding']
+              && ['Restore', 'Scheduled', 'TooManySnapshots', 'OfflineRebuilding', 'UnreservedSharedAccess']
                 .filter((key) => selectedVolume.conditions[key])
                 .map((key) => (
                   <ConditionTooltip
@@ -341,6 +341,16 @@ function VolumeInfo({ selectedVolume, snapshotModalState, engineImages, hosts, c
         <span className={styles.label}> Encrypted:</span>
         {String(selectedVolume.encrypted).firstUpperCase()}
       </div>
+      {selectedVolume.sharedBlock ? <div>
+        <div className={styles.row}>
+          <span className={styles.label}> Shared Block:</span>
+          True
+        </div>
+        <div className={styles.row}>
+          <span className={styles.label}> Frontend Nodes:</span>
+          {(selectedVolume.frontendNodeIDs || []).join(', ')}
+        </div>
+      </div> : ''}
       <div className={styles.row}>
         <span className={styles.label}> Node Tags:</span>
         {tagNodeChild}

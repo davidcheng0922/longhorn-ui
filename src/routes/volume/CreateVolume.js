@@ -164,6 +164,18 @@ const modal = ({
       size: currentSize,
     })
   }
+  // A shared block volume requires the ReadWriteMany access mode and the
+  // block device frontend, and does not support encryption.
+  const handleSharedBlockChange = (e) => {
+    if (e.target.checked) {
+      setFieldsValue({
+        accessMode: 'rwx',
+        frontend: 'blockdev',
+        encrypted: false,
+      })
+    }
+  }
+
   const displayDataSourceAlert = () => {
     const selectedVol = getFieldValue('dataSourceVolume')
     if (selectedVol === '' || selectedVol === undefined) {
@@ -482,8 +494,18 @@ const modal = ({
           {getFieldDecorator('encrypted', {
             valuePropName: 'checked',
             initialValue: false,
-          })(<Checkbox></Checkbox>)}
+          })(<Checkbox disabled={getFieldValue('sharedBlock') === true}></Checkbox>)}
         </FormItem>
+        {getFieldValue('dataEngine') === 'v2' && (
+          <FormItem label="Shared Block" {...formItemLayout}>
+            {getFieldDecorator('sharedBlock', {
+              valuePropName: 'checked',
+              initialValue: false,
+            })(<Checkbox onChange={handleSharedBlockChange}>
+              Attach to multiple nodes at the same time (ReadWriteMany block volume with NVMe reservation)
+            </Checkbox>)}
+          </FormItem>
+        )}
         <Spin spinning={tagsLoading}>
           <FormItem label="Node Tag" hasFeedback {...formItemLayout}>
             {getFieldDecorator('nodeSelector', {

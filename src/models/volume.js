@@ -195,7 +195,7 @@ export default {
         disableFrontend: payload.disableFrontend,
         AttachedBy: '',
         attacherType: '',
-        AttachmentID: 'longhorn-ui',
+        AttachmentID: payload.attachmentID,
       })
       yield put({ type: 'query' })
     },
@@ -527,12 +527,12 @@ export default {
       payload,
     }, { call, put }) {
       yield put({ type: 'hideBulkAttachHostModal' })
-      yield payload.urls.map(url => call(execAction, url, {
+      yield payload.volumes.map(volume => call(execAction, volume.url, {
         hostId: payload.host,
         disableFrontend: payload.disableFrontend,
         AttachedBy: '',
         attacherType: '',
-        AttachmentID: 'longhorn-ui',
+        AttachmentID: volume.attachmentID,
       }))
       yield put({ type: 'query' })
     },

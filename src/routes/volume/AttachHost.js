@@ -54,14 +54,20 @@ const modal = ({
     onOk: handleOk,
   }
 
-  const options = hosts.filter(host => host.conditions && host.conditions.Ready && host.conditions.Ready.status.toLowerCase() === 'true').map(host => <Select.Option key={host.name} value={host.id}>{host.name}</Select.Option>)
+  // A shared block volume is attached to more nodes, so skip the nodes it is
+  // already attached to.
+  const attachedHosts = items?.[0]?.sharedBlock ? (items[0].frontendNodeIDs || []) : []
+  const options = hosts.filter(host => host.conditions && host.conditions.Ready && host.conditions.Ready.status.toLowerCase() === 'true')
+    .filter(host => !attachedHosts.includes(host.id))
+    .map(host => <Select.Option key={host.name} value={host.id}>{host.name}</Select.Option>)
   if (!items || items.length === 0) {
     return null
   }
 
-  // RWX volumes can only be manually attached in maintenance mode.
+  // RWX volumes can only be manually attached in maintenance mode, except
+  // shared block volumes, which serve the block device on every attached node.
   const hasRwxVolume = items && items.some((item) => {
-    return item.accessMode === 'rwx' && !item.migratable
+    return item.accessMode === 'rwx' && !item.migratable && !item.sharedBlock
   })
 
   return (
